@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.StateMachinePersist;
@@ -19,14 +20,21 @@ import org.springframework.statemachine.persist.StateMachinePersister;
 @Configuration
 @EnableStateMachineFactory
 public class BookStateMachineConfig extends EnumStateMachineConfigurerAdapter<BookStates, BookEvents> {
-	@Autowired
+
 	private BookStateListener stateListener;
+	private StatePersist statePersist;
+
+	public BookStateMachineConfig(BookStateListener stateListener, StatePersist statePersist) {
+		this.stateListener = stateListener;
+		this.statePersist = statePersist;
+	}
 
 	@Override
 	public void configure(StateMachineConfigurationConfigurer<BookStates, BookEvents> config) throws Exception {
 		config.withConfiguration()
 			.autoStartup(true)
 			.listener(stateListener)
+			.machineId("bookFlow")
 			;
 	}
 
@@ -62,15 +70,15 @@ public class BookStateMachineConfig extends EnumStateMachineConfigurerAdapter<Bo
 	        .event(BookEvents.END_REPAIR)
         ;
 	}
-	
+
 	@Bean
 	public StateMachinePersist<BookStates, BookEvents, UUID> inMemoryPersist() {
-	    return new StatePersist();
+	    return this.statePersist;
 	}
 
 	@Bean
 	public StateMachinePersister<BookStates, BookEvents, UUID> persister(
-	        StateMachinePersist<BookStates, BookEvents, UUID> defaultPersist) {
+			@Qualifier("statePersist") StateMachinePersist<BookStates, BookEvents, UUID> defaultPersist) {
 
 	    return new DefaultStateMachinePersister<>(defaultPersist);
 	}

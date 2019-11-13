@@ -58,6 +58,10 @@ public class AppRestController {
 			accepted = stateMachine.sendEvent(BookEvents.RETURN);
 			persister.persist(stateMachine, ticket);
 			break;
+		case "CURRENT":
+			stateMachine = stateMachineFactory.getStateMachine(ticket);
+			persister.restore(stateMachine, ticket);
+			break;
 		default:
 			stateMachine = stateMachineFactory.getStateMachine(ticket);
 			stateMachine.stop();
